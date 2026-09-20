@@ -1,0 +1,11 @@
+# 실제 비밀 값, 빌드 산출물, 로컬 개발 파일은 Git에 올리지 않습니다.
+.env
+.env.*
+!.env.example
+**/node_modules/
+**/dist/
+**/target/
+.idea/
+.vscode/
+*.log
+.DS_Store

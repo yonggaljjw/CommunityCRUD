@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: joji-community
+  datasource:
+    url: jdbc:mysql://${DB_HOST:mysql}:${DB_PORT:3306}/${MYSQL_DATABASE}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
+  flyway:
+    enabled: true
+  jackson:
+    time-zone: UTC
+server:
+  port: 8080
+  # Nginx 아래에서도 임의의 전달 헤더를 신뢰하지 않습니다.
+  forward-headers-strategy: none
+  servlet:
+    session:
+      timeout: 24h
+      cookie:
+        http-only: true
+        same-site: strict
+        secure: ${COOKIE_SECURE:false}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+app:
+  allowed-origins: ${APP_ORIGINS:http://localhost:8088,http://localhost:5173}

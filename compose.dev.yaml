@@ -1,0 +1,10 @@
+# 개발용 덮어쓰기: MySQL과 Spring Boot를 로컬 PC에서만 접근 가능하게 합니다.
+# docker compose -f compose.yaml -f compose.dev.yaml up --build -d mysql backend
+# frontend 폴더에서 npm ci 후 npm run dev -> http://localhost:5173
+services:
+  mysql:
+    ports:
+      - "127.0.0.1:3306:3306"
+  backend:
+    ports:
+      - "127.0.0.1:8080:8080"

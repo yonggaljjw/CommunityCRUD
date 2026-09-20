@@ -1,0 +1,53 @@
+# 실행: docker compose up --build -d
+# DB와 서버 포트는 외부에 공개하지 않고 Nginx의 웹 포트만 엽니다.
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:?MYSQL_DATABASE를 .env에 설정하세요}
+      MYSQL_USER: ${MYSQL_USER:?MYSQL_USER를 .env에 설정하세요}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD를 .env에 설정하세요}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD를 .env에 설정하세요}
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci"]
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      # 이 검사는 서버 준비 여부를 확인합니다. 비밀번호 값을 프로세스 인자에 노출하지 않습니다.
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      APP_ORIGINS: ${APP_ORIGINS:-http://localhost:8088,http://localhost:5173}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      APP_SEED_DEMO: ${APP_SEED_DEMO:-false}
+      DEMO_POST_PASSWORD: ${DEMO_POST_PASSWORD:-}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 40s
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-8088}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+volumes:
+  mysql-data:
