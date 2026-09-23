@@ -1,4 +1,5 @@
 <script setup>
+// 여러 화면에서 재사용하는 공통 모달입니다. ESC 닫기와 포커스 복귀를 처리합니다.
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import { X } from "lucide-vue-next";
 defineProps({ title: String });

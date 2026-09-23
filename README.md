@@ -75,30 +75,93 @@ macOS/Linux에서는 `cp .env.example .env` 후 편집합니다. `MYSQL_PASSWORD
 
 원본 시안의 이미지 첨부, 이모티콘 스토어, 음성 댓글, 대댓글, 투표, 공지 관리, 신고·운영자 차단, 임시방 만료, 회원 계정은 이번 구현 범위에 포함하지 않았습니다. 작동하지 않는 기능을 되는 것처럼 표시하지 않도록 관련 버튼과 가상 통계를 제거했습니다. `인기글`은 전체 기간 추천순이고, 시간별 실시간 순위가 아닙니다.
 
-## 4. 폴더 안내
+## 4. 디렉터리 구조와 역할
 
-| 위치 | 읽을 내용 |
-|---|---|
-| `frontend/src/App.vue` | 공통 헤더·갤러리 메뉴·우측 라운지 |
-| `frontend/src/views/BoardView.vue` | 게시글 목록·검색·필터·페이지 처리 |
-| `frontend/src/views/WriteView.vue` | 글쓰기와 수정 폼 |
-| `frontend/src/views/PostView.vue` | 글 상세·추천·댓글·삭제 모달 |
-| `frontend/src/views/ChatView.vue` | 채팅방 목록과 개설 |
-| `frontend/src/components/ChatPanel.vue` | 채팅 표시·입력 |
-| `frontend/src/composables/useChat.js` | WebSocket 연결·수신·재접속 |
-| `frontend/src/api.js` | 공통 HTTP 요청과 오류 처리 |
-| `frontend/src/style.css` | 시안에서 가져온 색상·반응형 레이아웃 |
-| `backend/src/main/java/com/joji/community/CommunityController.java` | API 진입점 |
-| `backend/src/main/java/com/joji/community/CommunityService.java` | 비밀번호 검사·트랜잭션·쓰기 로직 |
-| `backend/src/main/java/com/joji/community/CommunityRepository.java` | SQL 실행과 응답 매핑 |
-| `backend/src/main/java/com/joji/community/WebSocketConfig.java` | WebSocket 연결 허용 조건 |
-| `backend/src/main/java/com/joji/community/ChatHandler.java` | 메시지 저장 후 같은 방으로 전달 |
-| `backend/src/main/resources/db/migration/` | Flyway 테이블 생성 SQL |
-| `backend/src/test/` | HTTP/실제 WebSocket 서버 통합 테스트 |
-| `compose.yaml` | MySQL → 서버 → 웹 서버 기동 순서 |
-| `docs/LEARNING_GUIDE.md` | 따라 구현하는 순서와 핵심 개념 |
-| `docs/API.md` | HTTP·WebSocket 계약 |
-| `docs/VERIFICATION.md` | 실제 검증 결과와 검증하지 못한 영역 |
+이번 버전은 **README를 만들기 위해 폴더를 쪼개지 않고, 실제로 관리에 도움이 되는 기능 단위만 폴더로 분리**했습니다. 작은 기능 안에서는 Controller/Service/Repository/DTO를 별도 하위 폴더로 다시 나누지 않고 같은 기능 폴더에 둡니다. 파일 수가 크게 늘어날 때만 그때 하위 패키지를 추가하면 됩니다.
+
+```text
+CommunityCRUD/
+├─ README.md                         # 프로젝트 전체 설명과 실행 방법
+├─ compose.yaml                     # MySQL → Spring Boot → Nginx 실행
+├─ compose.dev.yaml                 # 로컬 프런트 개발용 추가 설정
+├─ .env.example                     # 공유 가능한 환경 변수 예시
+├─ scripts/
+│  ├─ README.md                     # 환경 초기화 스크립트 설명
+│  └─ init_env.py                   # 임의 비밀번호로 .env 생성
+├─ docs/
+│  ├─ README.md                     # 문서 안내
+│  ├─ API.md                        # HTTP / WebSocket 계약
+│  ├─ LEARNING_GUIDE.md             # 기능 흐름을 따라가는 학습 가이드
+│  └─ VERIFICATION.md               # 검증 범위와 결과
+├─ frontend/
+│  ├─ README.md                     # 프런트 전체 구조 설명
+│  └─ src/
+│     ├─ App.vue                    # 공통 레이아웃을 조립하는 최상위 화면
+│     ├─ main.js                    # Vue 앱 시작점
+│     ├─ style.css                  # 전역 스타일
+│     ├─ router/
+│     │  └─ index.js                # URL ↔ 화면 연결
+│     ├─ stores/
+│     │  └─ appState.js             # 갤러리/방/닉네임/토스트 공통 상태
+│     ├─ services/
+│     │  └─ api.js                  # fetch 공통 처리와 HTTP 오류 처리
+│     ├─ utils/
+│     │  └─ date.js                 # 날짜 표시 함수
+│     ├─ components/
+│     │  ├─ Modal.vue               # 여러 화면에서 재사용하는 모달
+│     │  └─ layout/
+│     │     ├─ SiteHeader.vue       # 브랜드·검색·상단 메뉴
+│     │     ├─ LeftSidebar.vue      # 갤러리·채팅방 바로가기
+│     │     ├─ RightSidebar.vue     # 실시간 라운지·글쓰기 보조 영역
+│     │     └─ SiteFooter.vue       # 공통 푸터
+│     └─ features/
+│        ├─ board/
+│        │  ├─ BoardView.vue        # 목록·검색·정렬·페이지 이동
+│        │  ├─ PostView.vue         # 상세·추천·댓글·삭제
+│        │  └─ WriteView.vue        # 작성·수정 공용 폼
+│        └─ chat/
+│           ├─ ChatView.vue         # 방 검색·생성·선택
+│           ├─ ChatPanel.vue        # 메시지 목록·입력 UI
+│           └─ useChat.js           # WebSocket·재접속·ack·과거 이력
+└─ backend/
+   ├─ README.md                     # 백엔드 전체 구조 설명
+   └─ src/main/java/com/joji/community/
+      ├─ CommunityApplication.java  # Spring Boot 시작점
+      ├─ board/
+      │  ├─ BoardController.java    # 게시판 HTTP API
+      │  ├─ BoardService.java       # 게시판 업무 규칙·트랜잭션
+      │  ├─ BoardRepository.java    # 게시판 SQL·DB 접근
+      │  └─ BoardModels.java        # 게시판 요청·응답 DTO
+      ├─ chat/
+      │  ├─ ChatController.java     # 채팅방 HTTP API
+      │  ├─ ChatService.java        # 채팅방 업무 규칙
+      │  ├─ ChatRepository.java     # 채팅 SQL·DB 접근
+      │  ├─ ChatModels.java         # 채팅 요청·응답 DTO
+      │  └─ ChatHandler.java        # WebSocket 메시지 처리
+      ├─ common/
+      │  ├─ SessionController.java  # 익명 세션 확인 API
+      │  ├─ AnonymousSession.java   # 익명 사용자 세션 관리
+      │  ├─ PasswordManager.java    # 비밀번호 해시·검증
+      │  ├─ JdbcInsertHelper.java   # INSERT 후 PK 조회 공통 기능
+      │  ├─ RequestGuard.java       # 요청 헤더·간격 보호
+      │  └─ ApiExceptionHandler.java# 공통 예외 응답
+      ├─ config/
+      │  └─ WebSocketConfig.java    # WebSocket 경로·Handshake 설정
+      └─ bootstrap/
+         └─ DemoData.java           # 예시 데이터 초기화
+```
+
+### 백엔드 읽는 법
+
+게시판은 같은 `board` 폴더 안에서 `BoardController → BoardService → BoardRepository → MySQL` 순서로 읽으면 됩니다. `BoardModels`는 각 계층에서 주고받는 요청·응답 자료형입니다. 채팅은 `ChatController → ChatService`로 방 입장 흐름을 본 뒤 `WebSocketConfig → ChatHandler → ChatRepository` 순서로 실시간 메시지 흐름을 보면 이해하기 쉽습니다.
+
+이 프로젝트 규모에서는 `board/controller`, `board/service`, `board/dto`처럼 한 파일짜리 하위 폴더를 만드는 것보다 관련 파일을 `board`에 함께 두는 편이 찾기 쉽습니다. 나중에 파일 수가 충분히 많아졌을 때만 하위 패키지를 추가하는 것을 권장합니다.
+
+### 프런트 읽는 법
+
+`main.js → App.vue → router/index.js`로 앱의 큰 골격을 본 뒤, `features/board` 또는 `features/chat`으로 들어가면 됩니다. 채팅도 `views/components/composables`로 다시 한 단계씩 나누지 않고 관련 파일을 한 기능 폴더에 모았습니다. 공통 UI만 `components`, 서버 통신은 `services`, 공통 상태는 `stores`로 분리했습니다.
+
+README는 **폴더를 만들기 위한 이유가 아니라, 관리상 필요해서 이미 존재하는 폴더를 설명하는 용도**로만 배치했습니다.
 
 ## 5. 예시 글과 개인정보
 

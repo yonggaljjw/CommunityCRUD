@@ -1,6 +1,6 @@
 # 한글 학습 가이드
 
-목표는 코드를 전부 외우는 것이 아니라, **화면에서 누른 버튼이 서버와 DB를 거쳐 다시 화면으로 돌아오는 길**을 이해하는 것입니다. SQL이 익숙하다면 `CommunityRepository`의 SQL부터 보고, 이를 호출하는 Service → Controller → Vue 순서로 거슬러 읽어도 좋습니다.
+목표는 코드를 전부 외우는 것이 아니라, **화면에서 누른 버튼이 서버와 DB를 거쳐 다시 화면으로 돌아오는 길**을 이해하는 것입니다. SQL이 익숙하다면 `BoardRepository` 또는 `ChatRepository`의 SQL부터 보고, 이를 호출하는 Service → Controller → Vue 순서로 거슬러 읽어도 좋습니다.
 
 ## 1단계. 전체 연결 구조
 
@@ -53,10 +53,10 @@ const save = () => console.log(title.value)
 1. `WriteView.vue`의 `form`에 `v-model`로 입력이 저장됩니다.
 2. `<form @submit.prevent="submit">`가 기본 페이지 새로고침을 막고 `submit()`을 실행합니다.
 3. `api('/posts', { method: 'POST', body: form })`이 `/api/posts`에 JSON을 보냅니다.
-4. `CommunityController.create()`가 `PostInput`으로 JSON을 받습니다.
+4. `BoardController.create()`가 `PostInput`으로 JSON을 받습니다.
 5. `@Valid`와 `@NotBlank`, `@Size`가 제목·내용·비밀번호 등의 길이를 검사합니다.
-6. `CommunityService.create()`가 전송 간격과 비밀번호 해시를 처리합니다.
-7. `CommunityRepository.createPost()`가 파라미터 바인딩으로 INSERT를 실행합니다.
+6. `BoardService.create()`가 전송 간격과 비밀번호 해시를 처리합니다.
+7. `BoardRepository.createPost()`가 파라미터 바인딩으로 INSERT를 실행합니다.
 8. DB에서 생성한 ID를 조회해 `Post` 응답으로 돌려줍니다.
 9. Vue Router가 `/posts/{id}`로 이동합니다.
 
@@ -126,7 +126,7 @@ sequenceDiagram
     S-->>B: message
 ```
 
-읽는 순서는 `ChatPanel.vue` → `useChat.js` → `WebSocketConfig.java` → `ChatHandler.java` → `CommunityRepository.message()`입니다.
+읽는 순서는 `features/chat/ChatPanel.vue` → `features/chat/useChat.js` → `WebSocketConfig.java` → `ChatHandler.java` → `ChatRepository.saveMessage()`입니다.
 
 - 비밀번호방 입장은 HTTP 요청으로 확인합니다. URL에 비밀번호를 넣지 않습니다.
 - WebSocket handshake도 비밀방 허가를 검사합니다. 화면에서만 잠그면 우회할 수 있습니다.
